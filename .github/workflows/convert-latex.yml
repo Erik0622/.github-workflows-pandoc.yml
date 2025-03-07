@@ -1,0 +1,43 @@
+name: Convert LaTeX to DOCX
+
+on:
+  repository_dispatch:
+    types: [convert-latex]
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Install Pandoc
+        run: sudo apt-get install -y pandoc
+      
+      - name: Download LaTeX from Gist
+        run: |
+          # Hole die Gist-URL aus dem Event-Payload
+          GIST_URL="${{ github.event.client_payload.gist_url }}"
+          echo "Downloading LaTeX from: $GIST_URL"
+          
+          # Lade die TeX-Datei herunter
+          curl -s "$GIST_URL" -o document.tex
+      
+      - name: Convert to DOCX
+        run: |
+          echo "Converting document.tex to document.docx"
+          pandoc document.tex -o document.docx
+      
+      - name: Upload DOCX to repository
+        uses: actions/upload-artifact@v3
+        with:
+          name: document
+          path: document.docx
+          
+      - name: Commit DOCX to repository
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add document.docx
+          git commit -m "Convert LaTeX to DOCX" || echo "No changes to commit"
+          git push
