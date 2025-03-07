@@ -3,31 +3,28 @@ name: Convert LaTeX to DOCX
 on:
   push:
     paths:
-      - '**.tex'  # Läuft, wenn eine .tex-Datei gepusht wird
+      - 'document.tex'  # Läuft nur, wenn document.tex aktualisiert wird
 
 jobs:
   convert:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Wichtig: Erlaubt dem Workflow, ins Repository zu schreiben
+      contents: write
     steps:
       - uses: actions/checkout@v3
       
       - name: Install Pandoc
         run: sudo apt-get install -y pandoc
       
-      - name: Convert LaTeX files to DOCX
+      - name: Convert LaTeX to DOCX
         run: |
-          for tex_file in $(find . -name "*.tex"); do
-            docx_file="${tex_file%.tex}.docx"
-            echo "Converting $tex_file to $docx_file"
-            pandoc "$tex_file" -o "$docx_file"
-          done
+          echo "Converting document.tex to document.docx"
+          pandoc document.tex -o document.docx
       
-      - name: Commit DOCX files
+      - name: Commit DOCX file
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add *.docx
-          git commit -m "Generate DOCX files" || echo "No changes to commit"
+          git add document.docx
+          git commit -m "Generate DOCX from LaTeX" || echo "No changes to commit"
           git push
